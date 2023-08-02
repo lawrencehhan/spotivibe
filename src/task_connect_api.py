@@ -4,7 +4,6 @@ import json
 import os
 import requests
 from structlog import get_logger
-from random import randint
 
 
 load_dotenv()
@@ -13,15 +12,22 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 baseUrl = 'https://api.spotify.com/v1'
 
-def getSpotifyToken():
-    # Client Credentials Flow: https://developer.spotify.com/documentation/general/guides/authorization-guide/#client-credentials-flow
-    authUrl = "https://accounts.spotify.com/api/token"
-    message = f"{CLIENT_ID}:{CLIENT_SECRET}".encode("ascii")
-    base64_message = base64.b64encode(message).decode("ascii")
-
-    auth_headers = {"Authorization": "Basic " + base64_message}
-    auth_data = {"grant_type": "client_credentials"}
-    response = requests.post(authUrl, data=auth_data, headers=auth_headers)
+def getAuthorizationCodeFlow(auth_code: str):
+    token_url = "https://accounts.spotify.com/api/token"
+    credentials = f"{CLIENT_ID}:{CLIENT_SECRET}".encode("ascii")
+    credentials_base64 = base64.b64encode(credentials).decode("ascii")
+    
+    auth_headers = {
+        "Authorization": f'Basic {credentials_base64}',
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    auth_data = {
+        "grant_type": "authorization_code",
+        "code": auth_code,
+        "redirect_uri": "http://localhost:8888/callback"
+    }
+    
+    response = requests.post(token_url, data=auth_data, headers=auth_headers)
     try:
         bearer_token = (json.loads(response.content.decode("ascii")))["access_token"]
     except:
@@ -46,15 +52,29 @@ def getUserPlaylists(bearer_token: str, user_id: str, offset: int, limit: int, b
     response = sendGetRequest(bearer_token, target_url)
     return response
 
-def getTest(bt, baseUrl):
-    print(baseUrl)
-    payload = {}
-    headers = {
-        'Authorization': f'Bearer {bt}'
-    }
-    print(headers)
 
-    response = requests.request("GET", baseUrl, headers=headers, data=payload)
-    print(response.text)
+
+
+
+
+
+
+## OLD client credentials flow method
+def getClientCredentialsFlow():
+    # Client Credentials Flow: https://developer.spotify.com/documentation/general/guides/authorization-guide/#client-credentials-flow
+    token_url = "https://accounts.spotify.com/api/token"
+    message = f"{CLIENT_ID}:{CLIENT_SECRET}".encode("ascii")
+    base64_message = base64.b64encode(message).decode("ascii")
+
+    auth_headers = {"Authorization": "Basic " + base64_message}
+    auth_data = {"grant_type": "client_credentials"}
+    response = requests.post(token_url, data=auth_data, headers=auth_headers)
+    try:
+        bearer_token = (json.loads(response.content.decode("ascii")))["access_token"]
+    except:
+        log.error("Invalid Client ID or Client Secret in .env file")
+        quit()
+    return bearer_token
+
 
 
