@@ -3,16 +3,15 @@ from dotenv import load_dotenv
 import json
 import os
 import requests
-from structlog import get_logger
 
 
 load_dotenv()
-log = get_logger(__name__)
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 baseUrl = 'https://api.spotify.com/v1'
+current_field_options = 'total,limit,offset,items(added_by,added_at,is_local,track(album,artists,disc_number,duration_ms,explicit,external_urls,id,name,popularity,track_number))'
 
-def getAuthorizationCodeFlow(auth_code: str):
+def getAuthorizationCodeFlowToken(auth_code: str):
     token_url = "https://accounts.spotify.com/api/token"
     credentials = f"{CLIENT_ID}:{CLIENT_SECRET}".encode("ascii")
     credentials_base64 = base64.b64encode(credentials).decode("ascii")
@@ -31,7 +30,7 @@ def getAuthorizationCodeFlow(auth_code: str):
     try:
         bearer_token = (json.loads(response.content.decode("ascii")))["access_token"]
     except:
-        log.error("Invalid Client ID or Client Secret in .env file")
+        # log.error("Invalid Client ID or Client Secret in .env file")
         quit()
     return bearer_token
 
@@ -41,18 +40,27 @@ def sendGetRequest(bearer_token: str, url: str):
     response_content = response.json()
     return response_content
 
-def getUserID(bearer_token: str, baseUrl: str):
+def getUserID(bearer_token: str, baseUrl: str = baseUrl):
     target_url = f'{baseUrl}/me'
     print(target_url)
     response = sendGetRequest(bearer_token, target_url)
     return response
 
-def getUserPlaylists(bearer_token: str, user_id: str, offset: int, limit: int, baseUrl: str = baseUrl):
-    target_url = f'{baseUrl}/users/{user_id}/playlists?offset={offset}&limit={limit}'
+def getUserPlaylists(bearer_token: str, offset: int = 0, limit: int = 50, baseUrl: str = baseUrl):
+    target_url = f'{baseUrl}/me/playlists?offset={offset}&limit={limit}'
     response = sendGetRequest(bearer_token, target_url)
     return response
 
+def _createFieldOptionsUrl(field_options: str):
+    # Follows the fields translation found on Spotify's api
+    # https://developer.spotify.com/documentation/web-api/reference/get-playlists-tracks
+    field_options_url = field_options.replace(',','%2C').replace('(','%28').replace(')','%29')
+    return field_options_url
 
+def getPlaylistItems(bearer_token: str, playlist_id: str, field_options_url: str, limit: int = 50, offset: int = 0):
+    target_url = f'{baseUrl}/playlists/{playlist_id}/tracks?fields={field_options_url}&limit={limit}&offset={offset}'
+    response = sendGetRequest(bearer_token, target_url)
+    return response
 
 
 
