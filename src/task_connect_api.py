@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import json
 import os
 import requests
+import pandas as pd
 
 
 load_dotenv()
@@ -61,6 +62,23 @@ def getPlaylistItems(bearer_token: str, playlist_id: str, field_options_url: str
     target_url = f'{baseUrl}/playlists/{playlist_id}/tracks?fields={field_options_url}&limit={limit}&offset={offset}'
     response = sendGetRequest(bearer_token, target_url)
     return response
+
+def getTrackAudio(bearer_token: str, track_id: str):
+    target_url = f'{baseUrl}/audio-features/{track_id}'
+    response = sendGetRequest(bearer_token, target_url)
+    return response
+
+def testRun(auth_code: str):
+    bt = getAuthorizationCodeFlowToken(auth_code)
+    playlists = getUserPlaylists(bt, offset = 1, limit=1)
+    bahb_id = playlists['items'][0]['id']
+    field_options_url = _createFieldOptionsUrl(current_field_options)
+    items = getPlaylistItems(bt, bahb_id, field_options_url, limit=1)
+    item = items['items'][0]
+    track = item['track']
+    track_id = track['id']
+    track_audio = getTrackAudio(bt, track_id)
+    df = pd.DataFrame
 
 
 
