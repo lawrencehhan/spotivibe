@@ -1,5 +1,4 @@
-from flask import Flask, jsonify, request, Response, json
-from structlog import get_logger
+from flask import Flask, request, Response
 from uuid import uuid4
 from dotenv import load_dotenv
 import os
@@ -9,9 +8,7 @@ import time
 # from task_connect_api import requestUserAuthorization
 
 load_dotenv()
-log = get_logger(__name__)
 CLIENT_ID = os.getenv('CLIENT_ID')
-CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 auth_code = None
 bearer_token = None
 app = Flask(__name__)
