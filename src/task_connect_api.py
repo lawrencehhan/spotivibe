@@ -78,9 +78,12 @@ def testRun(auth_code: str):
     track = item['track']
     track_id = track['id']
     track_audio = getTrackAudio(bt, track_id)
-    df = pd.DataFrame
+    df = pd.DataFrame(columns=['added_at', 'name', 'id','duration_ms', 'explicit', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature'])
 
-
+def getAllTrackData(bearer_token: str, playlist_id: str, field_options_url: str):
+    # bearer_token = getAuthorizationCodeFlowToken(auth_code)
+    
+    return
 
 
 
