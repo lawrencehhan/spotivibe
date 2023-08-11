@@ -1,19 +1,25 @@
 import pandas as pd
 from task_connect_api import getTrack, getTrackAudio
 
-def dispTrackInfo(track_id: str):
-    track = getTrack(track_id)
+
+# Collect all playlist items into one Pandas df
+def collectFullPlaylist(bearer_token: str, playlist_id: str):
+    return
+
+
+def dispTrackInfo(bearer_token: str, track_id: str):
+    track = getTrack(bearer_token, track_id)
     # Collect list in case there are multiple artists
     artists = []
     for artist in track['artists']:
         artists.append(artist['name'])
     # Converting millisecond durations to minutes and seconds
-    minutes, seconds = convertDuration(track['duration'])
+    minutes, seconds = convertDuration(track['duration_ms'])
     duration = f'{minutes}:{seconds}'
-    track_audio = getTrackAudio(track_id)
+    track_audio = getTrackAudio(bearer_token, track_id)
     track_info = {
         'Track': track['name'],
-        'Artist': artists,
+        'Artists': artists,
         'Track ID': track['id'],
         'Duration': duration,
         'Danceability': track_audio['danceability'],
@@ -32,8 +38,12 @@ def dispTrackInfo(track_id: str):
         'Popularity': track['popularity'],
         'Link': track['external_urls']['spotify']
     }
+    for k, v in track_info.items():
+        print(f'{k}: {v}')
     return track_info
 
 def convertDuration(duration_milli: int):
     minutes, seconds = divmod(duration_milli / 1000, 60)
+    minutes, seconds = int(minutes), int(seconds)
     return minutes, seconds
+

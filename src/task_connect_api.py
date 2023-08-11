@@ -63,6 +63,11 @@ def getPlaylistItems(bearer_token: str, playlist_id: str, field_options_url: str
     response = sendGetRequest(bearer_token, target_url)
     return response
 
+def getTrack(bearer_token: str, track_id: str):
+    target_url = f'{baseUrl}/tracks/{track_id}'
+    response = sendGetRequest(bearer_token, target_url)
+    return response
+
 def getTrackAudio(bearer_token: str, track_id: str):
     target_url = f'{baseUrl}/audio-features/{track_id}'
     response = sendGetRequest(bearer_token, target_url)
