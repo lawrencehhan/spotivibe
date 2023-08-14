@@ -1,6 +1,23 @@
 import pandas as pd
 from task_connect_api import getTrack, getTrackAudio
 
+# Get rid of excess info from Spotify's default get-playlist-items response and refromat them to tracks
+def filterItem(item: dict):
+    # Parent items wanted from 'item' 
+    added_at = item['added_at']
+    raw_track = item['track']
+    # Filtering and reconstructing item to track
+    album_filter_keys = ['id', 'name', 'release_date']
+    raw_track['album'] = {key: raw_track['album'][key] for key in album_filter_keys}
+    track_filter_keys = ['album', 'artists', 'duration_ms', 'explicit', 'external_urls', 'id', 'name', 'popularity']
+    filtered_track = {key: raw_track[key] for key in track_filter_keys}
+    return filtered_track
+
+# Item requests have superfluous info with nested tracks, and so they will be converted to new track{} schemas
+def convertPlaylistItemsToTracks(playlist: dict):
+    items = playlist['items'] # [{},{},{}]
+    filtered_playlist = [filterItem(item) for item in items]
+    return filtered_playlist
 
 # Collect all playlist items into one Pandas df
 def collectFullPlaylist(bearer_token: str, playlist_id: str):
