@@ -58,7 +58,7 @@ def _createFieldOptionsUrl(field_options: str):
     field_options_url = field_options.replace(',','%2C').replace('(','%28').replace(')','%29')
     return field_options_url
 
-def getPlaylistItems(bearer_token: str, playlist_id: str, field_options_url: str, limit: int = 50, offset: int = 0):
+def getPlaylist(bearer_token: str, playlist_id: str, field_options_url: str, limit: int = 50, offset: int = 0):
     target_url = f'{baseUrl}/playlists/{playlist_id}/tracks?fields={field_options_url}&limit={limit}&offset={offset}'
     response = sendGetRequest(bearer_token, target_url)
     return response
@@ -78,7 +78,10 @@ def testRun(auth_code: str):
     playlists = getUserPlaylists(bt, offset = 1, limit=1)
     bahb_id = playlists['items'][0]['id']
     field_options_url = _createFieldOptionsUrl(current_field_options)
-    items = getPlaylistItems(bt, bahb_id, field_options_url, limit=1)
+    
+    playlist = getPlaylist(bt, bahb_id, field_options_url, limit=3, offset=3170)
+    items = playlist['items']
+
     item = items['items'][0]
     track = item['track']
     track_id = track['id']
