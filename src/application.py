@@ -41,6 +41,7 @@ def requestUserAuthorization():
     thread.start()
 
     timeout = 30
+    
     start_time = time.time()
     while auth_code is None:
         elapsed_time = time.time() - start_time

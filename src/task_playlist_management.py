@@ -2,26 +2,44 @@ import pandas as pd
 from task_connect_api import getTrack, getTrackAudio
 
 # Get rid of excess info from Spotify's default get-playlist-items response and refromat them to tracks
-def filterItem(item: dict):
+def filterItemToTrack(item: dict):
     # Parent items wanted from 'item' 
-    added_at = item['added_at']
+    added_at = item['added_at'].split('T')[0]
     raw_track = item['track']
     # Filtering and reconstructing item to track
     album_filter_keys = ['id', 'name', 'release_date']
     raw_track['album'] = {key: raw_track['album'][key] for key in album_filter_keys}
-    track_filter_keys = ['album', 'artists', 'duration_ms', 'explicit', 'external_urls', 'id', 'name', 'popularity']
-    filtered_track = {key: raw_track[key] for key in track_filter_keys}
+    track_filter_keys_firstPass = ['album', 'artists', 'duration_ms', 'explicit', 'external_urls', 'id', 'name', 'popularity']
+    filtered_track = {key: raw_track[key] for key in track_filter_keys_firstPass}
+    filtered_track['added_at'] = added_at # may be a bottleneck !!
+    filtered_track['duration'] = convertDuration(filtered_track['duration_ms'])
     return filtered_track
 
 # Item requests have superfluous info with nested tracks, and so they will be converted to new track{} schemas
 def convertPlaylistItemsToTracks(playlist: dict):
     items = playlist['items'] # [{},{},{}]
-    filtered_playlist = [filterItem(item) for item in items]
+    filtered_playlist = [filterItemToTrack(item) for item in items]
     return filtered_playlist
 
-# Collect all playlist items into one Pandas df
-def collectFullPlaylist(bearer_token: str, playlist_id: str):
-    return
+# Cleans up track to have summarized parameters of interest
+def cleanTrack(track: dict, bearer_token: str):
+    track_filter_keys_secondPass = ['id', 'name', 'added_at', 'duration', 'duration_ms', 'explicit', 'popularity']
+    audio_filter_keys = ['danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature']
+    track_audio = getTrackAudio(bearer_token, track['id'])
+    filtered_audio = {key: track_audio[key] for key in audio_filter_keys}
+    filtered_track = {key: track[key] for key in track_filter_keys_secondPass}
+    cleaned_track = {**filtered_track, **filtered_audio}
+    return cleaned_track
+
+# Prepare a list of dicts of cleaned tracks with wanted parameters for easy df conversion
+def preparePlaylist(filtered_playlist: list, bearer_token: str):
+    cleaned_playlist = [cleanTrack(track, bearer_token) for track in filtered_playlist]
+    return cleaned_playlist
+
+# Convert a list of dicts to a pandas df
+def playlistToDataFrame(playlist: list):
+    df = pd.DataFrame.from_dict(playlist)
+    return df
 
 
 def dispTrackInfo(bearer_token: str, track_id: str):
@@ -64,3 +82,22 @@ def convertDuration(duration_milli: int):
     minutes, seconds = int(minutes), int(seconds)
     return minutes, seconds
 
+
+'added_at', 
+'name', 
+'id',
+'duration_ms', 
+'explicit', 
+'popularity',
+'danceability', 
+'energy', 
+'key', 
+'loudness', 
+'mode', 
+'speechiness', 
+'acousticness', 
+'instrumentalness', 
+'liveness', 
+'valence', 
+'tempo', 
+'time_signature'
