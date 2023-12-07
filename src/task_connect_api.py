@@ -4,7 +4,8 @@ import json
 import os
 import requests
 import pandas as pd
-
+# Temp imports delete later
+from task_playlist_management import convertPlaylistItemsToTracks, preparePlaylist, playlistToDF
 
 load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -75,18 +76,23 @@ def getTrackAudio(bearer_token: str, track_id: str):
 
 def testRun(auth_code: str):
     bt = getAuthorizationCodeFlowToken(auth_code)
-    playlists = getUserPlaylists(bt, offset = 1, limit=1)
-    bahb_id = playlists['items'][0]['id']
-    field_options_url = _createFieldOptionsUrl(current_field_options)
+    playlists = getUserPlaylists(bt, offset = 6, limit=5)
+    bahb = playlists['items'][0]
+    bahb_id = bahb['id']
+    custom_field_options_url = _createFieldOptionsUrl(current_field_options)
     
-    playlist = getPlaylist(bt, bahb_id, field_options_url, limit=3, offset=3170)
-    items = playlist['items']
+    playlist = getPlaylist(bt, bahb_id, custom_field_options_url, limit=50, offset=3282)
+    filtered_playlist = convertPlaylistItemsToTracks(playlist)
+    cleaned_playlist = preparePlaylist(filtered_playlist, bt)
+    df = playlistToDataFrame(cleaned_playlist)
 
-    item = items['items'][0]
-    track = item['track']
-    track_id = track['id']
-    track_audio = getTrackAudio(bt, track_id)
-    df = pd.DataFrame(columns=['added_at', 'name', 'id','duration_ms', 'explicit', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature'])
+    # items = playlist['items']
+    # item = items[0]
+    # track = item['track']
+    # track_ex = filtered_playlist[-1]
+    # track_id = track_ex['id']
+    # track_audio = getTrackAudio(bt, track_id)
+    # df = pd.DataFrame(columns=['added_at', 'name', 'id','duration_ms', 'explicit', 'popularity', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature'])
 
 def getAllTrackData(bearer_token: str, playlist_id: str, field_options_url: str):
     # bearer_token = getAuthorizationCodeFlowToken(auth_code)
@@ -94,24 +100,6 @@ def getAllTrackData(bearer_token: str, playlist_id: str, field_options_url: str)
     return
 
 
-
-
-## OLD client credentials flow method
-def getClientCredentialsFlow():
-    # Client Credentials Flow: https://developer.spotify.com/documentation/general/guides/authorization-guide/#client-credentials-flow
-    token_url = "https://accounts.spotify.com/api/token"
-    message = f"{CLIENT_ID}:{CLIENT_SECRET}".encode("ascii")
-    base64_message = base64.b64encode(message).decode("ascii")
-
-    auth_headers = {"Authorization": "Basic " + base64_message}
-    auth_data = {"grant_type": "client_credentials"}
-    response = requests.post(token_url, data=auth_data, headers=auth_headers)
-    try:
-        bearer_token = (json.loads(response.content.decode("ascii")))["access_token"]
-    except:
-        log.error("Invalid Client ID or Client Secret in .env file")
-        quit()
-    return bearer_token
 
 
 
