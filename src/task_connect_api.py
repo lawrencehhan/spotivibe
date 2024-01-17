@@ -42,6 +42,13 @@ def sendGetRequest(bearer_token: str, url: str):
     response_content = response.json()
     return response_content
 
+def sendPostRequest(bearer_token: str, url: str, body: dict):
+    headers = {"Authorization": f'Bearer {bearer_token}'}
+    request_body = json.dumps(body)
+    response = requests.post(url, headers=headers, data=request_body)
+    response_content = response.json()
+    return response_content
+
 def getUserID(bearer_token: str, baseUrl: str = baseUrl):
     target_url = f'{baseUrl}/me'
     print(target_url)
@@ -74,25 +81,47 @@ def getTrackAudio(bearer_token: str, track_id: str):
     response = sendGetRequest(bearer_token, target_url)
     return response
 
+def getArtist(bearer_token: str, artist_id: str):
+    target_url = f'{baseUrl}/artists/{artist_id}'
+    response = sendGetRequest(bearer_token, target_url)
+    return response
+
+def createPlaylist(bearer_token: str, user_id: str, name: str, public: bool = False, collaborative: bool = False, description: str = 'New Spotivibe playlist'):
+    target_url = f'{baseUrl}/users/{user_id}/playlists'
+    body = {
+        "name": name,
+        "public": public,
+        "collaborative": collaborative,
+        "description": description
+    }
+    response = sendPostRequest(bearer_token, target_url, body)
+    return response
+
+def addTracksToPlaylist(bearer_token: str, playlist_id: str, tracks: list):
+    target_url = f'{baseUrl}/playlists/{playlist_id}/tracks'
+    body = {"uris": tracks}
+    response = sendPostRequest(bearer_token, target_url, body)
+    return response
+
 def testRun(auth_code: str):
     bt = getAuthorizationCodeFlowToken(auth_code)
+    user_id = getUserID(bt)['id']
     playlists = getUserPlaylists(bt, offset = 6, limit=5)
-    bahb = playlists['items'][0]
+    bahb = playlists['items'][1]
     bahb_id = bahb['id']
     custom_field_options_url = _createFieldOptionsUrl(current_field_options)
     
-    playlist = getPlaylist(bt, bahb_id, custom_field_options_url, limit=50, offset=3282)
+    playlist = getPlaylist(bt, bahb_id, custom_field_options_url, limit=5, offset=3363)
     filtered_playlist = convertPlaylistItemsToTracks(playlist)
     cleaned_playlist = preparePlaylist(filtered_playlist, bt)
     df = playlistToDataFrame(cleaned_playlist)
 
-    # items = playlist['items']
-    # item = items[0]
-    # track = item['track']
-    # track_ex = filtered_playlist[-1]
-    # track_id = track_ex['id']
-    # track_audio = getTrackAudio(bt, track_id)
-    # df = pd.DataFrame(columns=['added_at', 'name', 'id','duration_ms', 'explicit', 'popularity', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature'])
+    # new_playlist = createPlaylist(bt, user_id, name="spotivibe_test")
+    new_playlist_id = '09naepORkqG4OvU2VgH9jz'
+    artist_id = playlist['items'][-1]['track']['artists'][0]['id']
+    zion_t = '5HenzRvMtSrgtvU16XAoby'
+    artist_genres = getArtist(bt, zion_t)['genres']
+
 
 def getAllTrackData(bearer_token: str, playlist_id: str, field_options_url: str):
     # bearer_token = getAuthorizationCodeFlowToken(auth_code)
