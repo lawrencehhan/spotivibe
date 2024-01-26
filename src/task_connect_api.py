@@ -51,7 +51,6 @@ def sendPostRequest(bearer_token: str, url: str, body: dict):
 
 def getUserID(bearer_token: str, baseUrl: str = baseUrl):
     target_url = f'{baseUrl}/me'
-    print(target_url)
     response = sendGetRequest(bearer_token, target_url)
     return response
 
@@ -65,6 +64,15 @@ def _createFieldOptionsUrl(field_options: str):
     # https://developer.spotify.com/documentation/web-api/reference/get-playlists-tracks
     field_options_url = field_options.replace(',','%2C').replace('(','%28').replace(')','%29')
     return field_options_url
+
+def getSpotifyGenres(bearer_token: str, baseUrl: str = baseUrl):
+    target_url = f'{baseUrl}/recommendations/available-genre-seeds'
+    response = sendGetRequest(bearer_token, target_url)
+    try:
+        genre_set = {genre for genre in response['genres']}
+    except:
+        genre_set = {'No Genres Returned'}
+    return genre_set
 
 def getPlaylist(bearer_token: str, playlist_id: str, field_options_url: str, limit: int = 50, offset: int = 0):
     target_url = f'{baseUrl}/playlists/{playlist_id}/tracks?fields={field_options_url}&limit={limit}&offset={offset}'
