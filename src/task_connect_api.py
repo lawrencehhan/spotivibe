@@ -4,8 +4,6 @@ import json
 import os
 import requests
 import pandas as pd
-# Temp imports delete later
-from task_playlist_management import convertPlaylistItemsToTracks, preparePlaylist, playlistToDF
 
 load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -40,6 +38,7 @@ def sendGetRequest(bearer_token: str, url: str):
     headers = {"Authorization": f'Bearer {bearer_token}'}
     response = requests.get(url, headers=headers)
     response_content = response.json()
+    ## Add safeguard here for retry times in case of hitting rate limit
     return response_content
 
 def sendPostRequest(bearer_token: str, url: str, body: dict):
