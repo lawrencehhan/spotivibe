@@ -177,9 +177,7 @@ def convertDuration(duration_milli: int):
     minutes, seconds = int(minutes), int(seconds)
     return minutes, seconds
 
-
-
-# Have a dictionary of feature and limits to be accessed later by a message function that warns users when out of bounds
+# Check if user's request exists within Spotify's property parameters
 def checkInBounds(target_property: str, spec):
     bounds = {
         'duration': (0,176400000),
@@ -344,7 +342,19 @@ def checkInBounds(target_property: str, spec):
         'mode',
         'genres'
     }
-    return 
+    if target_property in range_properties:
+        if (bounds[target_property][0] <= spec <= bounds[target_property][1]):
+            return True
+        else:
+            return False
+    elif target_property in set_properties:
+        if spec in bounds[target_property]:
+            return True
+        else:
+            return False
+    else:
+        print("Check that the target property exists")
+        return False
 
 
 'added_at', 
