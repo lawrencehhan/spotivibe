@@ -1,5 +1,6 @@
 import pandas as pd
 from task_connect_api import getTrack, getTrackAudio, getArtist
+import os
 
 bounds = {
         'duration': (0,176400000),
@@ -368,3 +369,25 @@ def filterDataFrame(df, target_property: str, spec, operand='greater'):
         return new_df
     else:
         print(f"Reference 'dispTrackFeatureOptions()' to check that your specs are within {target_property}'s parameters.")
+
+# Downloading DFs to prevent uneccessary future calls to the Spotify API when working on one playlist
+def downloadDataframe(df):
+  while True:
+    # Get user input for file name and location
+    file_name = input("Enter the desired file name (without extension): ")
+    file_location = input("Enter the desired file location (including directory): ")
+
+    # Validate file location
+    while not os.path.exists(file_location):
+      print(f"Error: Directory '{file_location}' does not exist. Please enter a valid directory path.")
+      file_location = input("Enter the desired file location (including directory): ")
+
+    # Construct the full file path with extension
+    file_path = os.path.join(file_location, f"{file_name}.csv")
+
+    try:
+      df.to_csv(file_path, index=False)
+      print(f"DataFrame successfully downloaded to {file_path}")
+      break
+    except Exception as e:
+      print(f"Error: An error occurred while saving the file: {e}")
