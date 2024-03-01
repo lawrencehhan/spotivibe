@@ -4,6 +4,7 @@ import json
 import os
 import requests
 import pandas as pd
+import time
 
 load_dotenv()
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -36,9 +37,19 @@ def getAuthorizationCodeFlowToken(auth_code: str):
 
 def sendGetRequest(bearer_token: str, url: str):
     headers = {"Authorization": f'Bearer {bearer_token}'}
-    response = requests.get(url, headers=headers)
-    response_content = response.json()
+    try:
+        response = requests.get(url, headers=headers)
+        response_content = response.json()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 429:
+            retry_after = int(e.response.headers.get('Retry-After', 1))
+            print(f"Rate limited. Retrying after {retry_after} seconds.")
+            time.sleep(retry_after + 1) 
+            return sendGetRequest(bearer_token, url)
+        else:
+            raise e
     ## Add safeguard here for retry times in case of hitting rate limit
+    ## Test retry methods in postman first
     return response_content
 
 def sendPostRequest(bearer_token: str, url: str, body: dict):
@@ -114,10 +125,10 @@ def testRun(auth_code: str):
     bt = getAuthorizationCodeFlowToken(auth_code)
     user_id = getUserID(bt)['id']
     playlists = getUserPlaylists(bt, offset = 6, limit=5)
-    bahb = playlists['items'][1]
+    bahb = playlists['items'][2]
     bahb_id = bahb['id']
     custom_field_options_url = _createFieldOptionsUrl(current_field_options)
-    
+
     playlist = getPlaylist(bt, bahb_id, custom_field_options_url, limit=5, offset=3363)
     filtered_playlist = convertPlaylistItemsToTracks(playlist)
     cleaned_playlist = preparePlaylist(filtered_playlist, bt)
